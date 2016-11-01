@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+
+{% if flag %}
+<h2>Here's other users</h2>
+    <ul>
+    {% for names in friendlist %}
+        <li>{{names[0]}}&nbsp&nbsp&nbsp{{names[1]}}&nbsp&nbsp&nbsp{{names[2]}}<a href="{{url_for('addFriendship',values=names[3])}}">Add as Friend</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+      <h1>Friend Added!</h1>
+      <ul><li><a href='/'>Home</a></li></ul>
+{% endif %}
+
+</html>

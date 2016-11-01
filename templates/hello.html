@@ -1,0 +1,41 @@
+<!-- author ben lawson (balawson@bu.edu) -->
+<!doctype html>
+{% if message %}
+  <h4>{{message}}!</h4>
+{% endif %}
+<title>Photoshare</title>
+{% if name %}
+  <h1>Hello {{ name }}!</h1>
+{% endif %}
+
+
+{% if message is none %}
+  <p>You should <a href='/login'>login!</a></p>
+{% else %}
+  <p> Go to <a href='/profile'>profile?</a></p>
+{% endif %}
+
+<ul>
+<li><a href = '/add_albums'> Add an album</a></li>
+<li><a href='/Addfriends'>Add Friends</a></li>
+<li><a href='/Viewfriends'>View Friends</a></li>
+<li><a href='/logout'>Logout</a></li>
+<li><a href='/'>Home</a></li>
+
+<!--{% if photos %}
+<h2>Here's your photos</h2>
+    <ul>
+    {% for photo in photos %}
+        <li>{{photo[2]}}</br><img src='data:image/png;base64, {{photo[0]}}'/></li>
+    {% endfor %}
+    </ul>
+{% endif %}-->
+
+{% if albums %}
+<center><h3> Here are your Albums ! </h3></center>
+	<ul>
+    {% for album in albums %}
+        <center><a href="{{url_for('showPhotos',values=album[0])}}">{{album[1]}}</a></center>
+    {% endfor %}
+    </ul>
+{% endif %}
