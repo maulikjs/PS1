@@ -1,6 +1,6 @@
 <!doctype html>
 <ul>
-<li><a href="{{url_for('upload_file',values=album_id)}}">Upload a photo</a> </li> 
+<li><a href="{{url_for('upload_file',values=album_id)}}">Upload a photo</a> </li>
 <li><a href='/logout'>Logout</a></li>
 <li><a href='/'>Home</a></li>
 </ul>
@@ -13,7 +13,35 @@
         <center><img  src='data:image/png;base64, {{photo[0]}}' width="40%"/></center>
         <form method="post" action="{{url_for('delete_photos',values=album_id, values2 = photo[1])}}">
         	<center><input type="submit" value="Delete Above Photo" /></center>
-        </form> 
+        </form>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+
+{% if tagphotos %}
+<h2>Here's your photos with this tag</h2>
+    <ul>
+    {% for tagphoto in tagphotos %}
+        <li>{{tagphoto[0]}}</br><img src='data:image/png;base64, {{tagphoto[1]}}'  width="40%"/></li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+{% if notusertagphotos %}
+<h2>Here's other photos with this tag</h2>
+    <ul>
+    {% for notusertagphoto in notusertagphotos %}
+        <li>{{notusertagphoto[0]}}</br><img src='data:image/png;base64, {{notusertagphoto[1]}}'  width="40%"/></li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+{% if tagsearchphotos %}
+<h2>Here's the photos</h2>
+    <ul>
+    {% for tagsearchphoto in tagsearchphotos %}
+        <li>{{tagsearchphoto[0]}} by {{tagsearchphoto[2]}} {{tagsearchphoto[3]}}</br><img src='data:image/png;base64, {{tagsearchphoto[1]}}'  width="40%"/></li>
     {% endfor %}
     </ul>
 {% endif %}

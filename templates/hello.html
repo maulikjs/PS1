@@ -16,9 +16,12 @@
 {% endif %}
 
 <ul>
-<li><a href = '/add_albums'> Add an album</a></li>
+<li><form method="post" action='/search'><label for="tags">Search:</label><input type="text" name="tags" /><input type="submit" /></form></li>
+<li><a href='/youmaylike'>You May Also Like!</a></li>
+<li><a href = '/add_albums'>Add an album</a></li>
 <li><a href='/Addfriends'>Add Friends</a></li>
 <li><a href='/Viewfriends'>View Friends</a></li>
+<li><a href='/top10'>View top 10 users </a><li>
 <li><a href='/logout'>Logout</a></li>
 <li><a href='/'>Home</a></li>
 
@@ -31,11 +34,70 @@
     </ul>
 {% endif %}-->
 
+
+{% if photos %}
+<h2>Here's your photos</h2>
+    <ul>
+    {% for photo in photos %}
+        <li>{{photo[2]}}</br><img src='data:image/png;base64, {{photo[0]}}'/></li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
 {% if albums %}
 <center><h3> Here are your Albums ! </h3></center>
 	<ul>
     {% for album in albums %}
-        <center><a href="{{url_for('showPhotos',values=album[0])}}">{{album[1]}}</a></center>
+        <center><form method="post" action="{{ url_for('delete_album', value=album[0])}}"><a href="{{url_for('showPhotos',values=album[0])}}">{{album[1]}}</a><input type="submit" value="Delete ALBUM"></form></center>
     {% endfor %}
     </ul>
+{% endif %}
+
+
+{% if tags %}
+<h2>Here's your tags</h2>
+
+     <ul>
+{% for tag in tags %}
+
+    <li><a href="{{ url_for('display_tag_photos', value1=tag[0], value2=0)}}">{{tag[1]}}</a>
+    </li>{% endfor %}
+</ul>
+    </ul>
+{% endif %}
+
+{% if othertags %}
+<h2>Here's other tags</h2>
+
+     <ul>
+{% for othertag in othertags %}
+
+    <li><a href="{{ url_for('display_tag_photos', value1=othertag[0], value2= 1)}}">{{othertag[1]}}</a>
+    </li>{% endfor %}
+</ul>
+    </ul>
+{% endif %}
+
+{% if top10tags %}
+<h2>Here's top 10 tags</h2>
+
+
+     <ul>
+{% for top10tag in top10tags %}
+
+    <li><a href="{{ url_for('display_tag_photos', value1=top10tag[0], value2= 1)}}">{{top10tag[1]}}</a>
+    </li>{% endfor %}
+</ul>
+    </ul>
+{% endif %}
+
+<ul>
+{% if youmaylike %}
+    <h2>You may also like!</h2>
+    <ul>
+
+      {% for yml in youmaylike %}
+      <li>{{yml[0]}}</br><img src='data:image/png;base64, {{yml[1]}}' width=40%/></li>
+  {% endfor %}
+  </ul>
 {% endif %}

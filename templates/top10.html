@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Top 10 Users!</title>
+</head>
+<body>
+
+<h2>Here's top users</h2>
+    <ul>
+    {% for user in user_activity %}
+        <h4>{{user[0]}} : {{user[1]}} <--(Count) </h4>
+    {% endfor %}
+    </ul>
+    <a href='/'>Home</a>
+</body>
+</html>
