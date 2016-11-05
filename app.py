@@ -13,6 +13,8 @@ import flask
 from flask import Flask, Response, request, render_template, redirect, url_for
 from flaskext.mysql import MySQL
 import flask.ext.login as flask_login
+from flask.ext.login import current_user
+from collections import Counter
 import operator
 
 #for image uploading
@@ -38,6 +40,7 @@ conn = mysql.connect()
 cursor = conn.cursor()
 cursor.execute("SELECT email from Users")
 users = cursor.fetchall()
+aid=0
 
 def getUserList():
 	cursor = conn.cursor()
@@ -150,8 +153,9 @@ def register_user():
 def getUsersPhotosFinal(album_id):
 	print(album_id)
 	cursor = conn.cursor()
-	cursor.execute("SELECT data, photos.PhotoID, caption FROM Photos,stores where stores.albumID='{0}' AND Photos.PhotoID=stores.photoID".format(album_id))
-	return cursor.fetchall() #NOTE list of tuples, [(imgdata, pid), ...]
+	cursor.execute("SELECT photos.data, photos.PhotoID, photos.caption FROM Photos,stores where stores.albumID='{0}' AND Photos.PhotoID=stores.photoID".format(album_id))
+	Globalvariableforphotos = cursor.fetchall()
+	return Globalvariableforphotos #NOTE list of tuples, [(imgdata, pid), ...]
 
 def getUserIdFromEmail(email):
 	cursor = conn.cursor()
@@ -182,7 +186,34 @@ def getUsersAlbums(uid):
         cursor.execute("Select AlbumID, album_name From albums WHERE OwnerID = '{0}'".format(uid))
         return cursor.fetchall()
 
-#end login code
+@app.route('/tags', methods=['GET'])
+@flask_login.login_required
+def display_tag_photos():
+	tag = request.args.get('value1')
+	flag = request.args.get('value2')
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	print flag
+	if flag == '1':
+		print('Something ia hishc')
+
+		print('Something ia hishc')
+		global Globalvariableforphotos
+		Globalvariableforphotos = getPhotosWithTags(uid, tag, flag)
+		return render_template('albums.html', tagphotos= Globalvariableforphotos)
+	elif flag == '2':
+		print('Something ia hishc')
+
+		print('Something ia hishc')
+		global Globalvariableforphotos
+		Globalvariableforphotos = getPhotosWithTags(uid, tag, '1')
+		return render_template('albums.html', notusertagphotos= Globalvariableforphotos)
+	elif flag == '0':
+		print('not not not')
+		global Globalvariableforphotos
+		Globalvariableforphotos = getPhotosWithTags(uid, tag, flag)
+		global Globalvariableforphotos1
+		Globalvariableforphotos1 = getPhotosWithTags(uid, tag, 2)
+		return render_template('albums.html', tag1photos= Globalvariableforphotos, notusertagphotos = Globalvariableforphotos1)
 
 @app.route('/profile')
 @flask_login.login_required
@@ -204,7 +235,7 @@ def upload_file():
 		imgfile = request.files['photo']
 		caption = request.form.get('caption')
 		tags = request.form.get('tags')
-		tag = [x.strip('#') for x in tags.split(' ')]
+		tag = [x.strip(' ') for x in tags.split(' ')]
 		print caption
 		album_id= request.args.get('values')
 
@@ -260,6 +291,12 @@ def getTagIDFromTagName(title):
 	else:
 		return flag
 
+@app.route('/allalbums', methods=['POST','GET'])
+def displayallalbums():
+	cursor = conn.cursor()
+	cursor.execute("SELECT  a.albumid, a.album_name, u.userid, u.first_name, u.last_name From Albums a, Users u Where a.Ownerid = u.userid")
+	return render_template('allalbums.html', allalbums=cursor.fetchall())
+
 
 #display album's photos
 @app.route('/albums')
@@ -305,7 +342,7 @@ def delete_album():
 		print(uid)
 
 		cursor = conn.cursor()
-		cursor.execute("DELETE FROM Photos p , stores s WHERE p.photoid = s.photoid and s.albumid = '{0}'".format(aid))
+		cursor.execute("DELETE FROM photos using photos, stores WHERE photos.photoid = stores.photoid and stores.albumid = '{0}'".format(aid))
 		conn.commit()
 
 		cursor = conn.cursor()
@@ -395,19 +432,10 @@ def userwillike(uid):
 		cursor=conn.cursor()
 		cursor.execute("SELECT p.caption, p.data from photos p where p.photoid='{0}'".format(key))
 		gotnew += cursor.fetchall()
-
+	Globalvariableforphotos = gotnew
 	return gotnew
 
-@app.route('/tags', methods=['GET'])
-@flask_login.login_required
-def display_tag_photos():
-	tag = request.args.get('value1')
-	flag = request.args.get('value2')
-	uid = getUserIdFromEmail(flask_login.current_user.id)
-	if flag == '1':
-		return render_template('albums.html', tagphotos= getPhotosWithTags(uid, tag, flag))
-	else:
-		return render_template('albums.html', tagphotos= getPhotosWithTags(uid, tag, flag), notusertagphotos = getPhotosWithTags(uid, tag, 2))
+
 
 @app.route('/search', methods=['POST'])
 @flask_login.login_required
@@ -415,6 +443,16 @@ def display_tag_search_photos():
 	tags = request.form.get('tags')
 	tags = tags.split(" ")
 	return render_template('albums.html', tagsearchphotos= getTagSearchPhotos(tags))
+
+	tags = request.form.get('tags')
+	tags = tags.split(" ")
+	if current_user.is_authenticated:
+		uid=getUserIdFromEmail(flask_login.current_user.id)
+	else:
+		uid=4
+	global Globalvariableforphotos
+	Globalvariableforphotos = getTagSearchPhotos(tags)
+	return render_template('album.html', tagsearchphotos= Globalvariableforphotos, uid=uid)
 
 def getTagIDFromTagName(title):
 	cursor = conn.cursor()
@@ -434,29 +472,32 @@ def getPhotosWithTags(uid, tag, flag):
 	if flag == '1':
 		cursor = conn.cursor()
 		cursor.execute("SELECT DISTINCT p.caption, p.data FROM Photos p, Albums a, Tags t, Associatedwith tp WHERE tp.tagid = '{0}' and p.Photoid = tp.photoid".format(tag))
-		return cursor.fetchall()
+		Globalvariableforphotos = cursor.fetchall()
+		return Globalvariableforphotos
 	elif flag == 2:
 		cursor = conn.cursor()
 		cursor.execute("SELECT DISTINCT p1.caption, p1.data FROM Photos p1, Associatedwith tp1 WHERE tp1.tagid = '{1}' and p1.Photoid = tp1.photoid and p1.caption NOT IN (SELECT DISTINCT p.caption FROM Photos p, Users u, Albums a, Tags t,stores s, Associatedwith tp WHERE a.OwnerID='{0}' and p.photoid=s.photoid and s.albumid=a.albumid and tp.tagid ='{1}' AND p.Photoid=tp.photoid)".format(uid, tag))
-		return cursor.fetchall()
+		Globalvariableforphotos = cursor.fetchall()
+		return Globalvariableforphotos
 	else:
 		cursor = conn.cursor()
 		cursor.execute("SELECT DISTINCT p.caption, p.data FROM Photos p, Users u, Albums a, Tags t, Associatedwith tp,stores s WHERE a.OwnerID = '{0}' and p.photoid = s.photoid and s.albumid = a.albumid  and tp.tagid = '{1}' and p.Photoid = tp.photoid".format(uid, tag))
-		return cursor.fetchall()
+		Globalvariableforphotos = cursor.fetchall()
+		return Globalvariableforphotos
 
 @app.route('/top10')
 def showtop10users():
 	cursor = conn.cursor()
-	cursor.execute("SELECT userid, firstname, lastname, email from users")
+	cursor.execute("SELECT userid, first_name, last_name, email from users")
 	top10users = cursor.fetchall()
 	print(top10users)
 	user_activity = {}
 	for i in top10users:
 		cursor = conn.cursor()
-		cursor.execute("SELECT count(*) from photos where userid = {0}".format(i[0]))
+		cursor.execute("SELECT count(*) from photos,albums where albums.ownerid = {0} and stores.albumid = albums.albumid and photos.photoid=stores.p".format(i[0]))
 		photo_count = cursor.fetchall()[0]
 		cursor = conn.cursor()
-		cursor.execute("SELECT count(*) from comments where ownerid = {0} and ".format(i[0]))
+		cursor.execute("SELECT count(*) from comments,writes where writes.userID= '{0}' and commennts.cid=writes.cid".format(i[0]))
 		comment_count = cursor.fetchall()[0]
 		#print(comment_count[0],photo_count[0])
 		rank_count = int(comment_count[0]) + int(photo_count[0])
@@ -501,7 +542,8 @@ def getTagSearchPhotos(tags):
 	print ("SELECT p.caption, p.data FROM Photos p" + st)
 	cursor = conn.cursor()
 	cursor.execute("SELECT p.caption, p.data FROM Photos p" + st)
-	return cursor.fetchall()
+	Globalvariableforphotos = cursor.fetchall()
+	return Globalvariableforphotos
 
 	# cursor.execute("SELECT DISTINCT p.caption, p.data FROM Photos p, Tags t, Associate_with tp WHERE p.album_id and tp.tag_id = t.tagID and p.Photo_id = tp.photo_id and t.title = tags".format(uid, tag))
 	# return cursor.fetchall()
@@ -524,6 +566,128 @@ def getTop10Tags():
 	cursor.execute("SELECT  t.tagid, t.title From Associatedwith tp, Tags t Where tp.tagid = t.tagID group by tp.tagid order by count(tp.tagid) desc limit 10")
 	return cursor.fetchall()
 
+@app.route('/commentsdisplay', methods=['POST'])
+def display_comments():
+
+        pid=request.args.get('value')
+        print(pid)
+        cursor = conn.cursor()
+        cursor.execute("SELECT u.userid, u.First_Name, u.Last_Name, c.Commenttext FROM Comments c, User u,photos p Where c.photoid = p.photoid and c.Commenterid = u.user_id".format(pid))
+        userss = cursor.fetchall()
+        return render_template('displaycomments.html', usercomments = userss)
+
+@app.route('/ccc', methods=['POST'])
+def add_comment():
+
+        pid=request.args.get('value')
+        flag=request.args.get('value1')
+        print(pid)
+        text = request.form.get('text')
+        if current_user.is_authenticated:
+        	uid=getUserIdFromEmail(flask_login.current_user.id)
+        else:
+        	uid = 99
+
+		cursor = conn.cursor()
+		cursor.execute("INSERT INTO Comments (Commenttext) VALUES ('{0}') ".format(text))
+		conn.commit()
+
+		cursor=conn.cursor()
+		cursor.execute("INSERT INTO Writes(userid) VALUES ('{0}') ".format(uid))
+		con.commit()
+
+		cursor = conn.cursor()
+        cursor.execute("INSERT INTO has(photoid) VALUES ('{0}') ".format(pid))
+        conn.commit()
+
+        if flag == '1':
+        	return render_template('albums.html', notusertagphotos= Globalvariableforphotos)
+        elif flag == '2':
+        	return render_template('albums.html', tagsearchphotos= Globalvariableforphotos, uid=uid)
+        elif flag == '3':
+        	return render_template('albums.html', photos=Globalvariableforphotos, albumid=aid, flag=flag)
+
+@app.route('/xyz')
+def displayPhotos():
+    if current_user.is_authenticated:
+       	uid=getUserIdFromEmail(flask_login.current_user.id)
+    else:
+        uid = 4
+    flag=request.args.get('value1')
+    print flag
+    global aid
+    aid=request.args.get('values')
+    print(aid)
+    global Globalvariableforphotos
+    Globalvariableforphotos = getUsersPhotosFinal(aid)
+    uploadflag=request.args.get('value1')
+    return render_template('albums.html', photos=Globalvariableforphotos, albumid=aid, flag=flag, uploadflag=uploadflag, uid=uid)
+
+
+@app.route('/likes', methods=['POST'])
+@flask_login.login_required
+def like_photo():
+	pid = request.args.get('value')
+	flag = request.args.get('value1')
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	cursor.execute("INSERT INTO Likes (userid, photoid) values ('{0}', '{1}')".format(uid, pid))
+	conn.commit()
+	if flag == '1':
+		return render_template('albums.html', message='Like Added', photos=Globalvariableforphotos, albumid=aid)
+	elif flag == '2':
+		return render_template('albums.html', message='Like Added', tagphotos= Globalvariableforphotos)
+	elif flag == '3':
+		return render_template('albums.html', message='Like Added', tag1photos= Globalvariableforphotos, notusertagphotos = Globalvariableforphotos1)
+	elif flag == '4':
+		return render_template('albums.html', message='Like Added', tagsearchphotos= Globalvariableforphotos)
+		#render_template('album.html', photos=getUsersPhotos(aid), albumid=aid)
+
+
+@app.route('/likeusers', methods=['POST'])
+@flask_login.login_required
+
+def display_like_users():
+
+        pid=request.args.get('value')
+        print(pid)
+        cursor = conn.cursor()
+        cursor.execute("SELECT u.userid, u.First_Name, u.last_name FROM User u, Likes l Where l.photoid = '{0}' and l.userid = u.userid".format(pid))
+        userss = cursor.fetchall()
+        print userss
+        return render_template('userliked.html', likeusers = userss)
+
+#GIve tag reccomendations
+@app.route('/ppp', methods=['POST'])
+@flask_login.login_required
+def recommendations2():
+	tags = request.form.get('tags')
+	tags1 = []
+	tags = tags.split(" ")
+	for i in tags:
+		print i
+		tags1.append(i)
+	print tags1
+	cursor = conn.cursor()
+	cursor.execute("SELECT aw.photoid FROM Associatedwith aw, Tags t Where t.title = '{0}' and t.tagid = aw.tagid or t.title = '{1}' and t.tagid = aw.tagid".format(tags1[0], tags1[1]))
+	photo_ids = cursor.fetchall()
+	recommendation=[]
+	for photo_id in photo_ids:
+		cursor = conn.cursor()
+		cursor.execute("SELECT t.title FROM Associatedwith aw, Tags t Where t.tagid = aw.tagid and aw.photoid = '{0}'".format(photo_id[0]))
+		tagnames = cursor.fetchall()
+		for tagname in tagnames:
+			print tagname
+			if tagname[0] in tags1:
+				tagname
+				continue
+			else:
+				recommendation.append(tagname[0])
+	print recommendation
+	counts = Counter(recommendation)
+	recommendations = sorted(set(recommendation), key=counts.get, reverse=True)
+	recommendations = recommendations[0:5]
+	return render_template('upload.html', albumid=aid, tagrecommendations=recommendations)
 
 #default page
 @app.route("/", methods=['GET'])

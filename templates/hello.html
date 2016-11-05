@@ -1,5 +1,6 @@
 <!-- author ben lawson (balawson@bu.edu) -->
 <!doctype html>
+<center>
 {% if message %}
   <h4>{{message}}!</h4>
 {% endif %}
@@ -21,7 +22,8 @@
 <li><a href = '/add_albums'>Add an album</a></li>
 <li><a href='/Addfriends'>Add Friends</a></li>
 <li><a href='/Viewfriends'>View Friends</a></li>
-<li><a href='/top10'>View top 10 users </a><li>
+<li><a href='/top10'>View top 10 users </a></li>
+<li><a href="/allalbums">Display Albums</a></li>
 <li><a href='/logout'>Logout</a></li>
 <li><a href='/'>Home</a></li>
 
@@ -39,7 +41,7 @@
 <h2>Here's your photos</h2>
     <ul>
     {% for photo in photos %}
-        <li>{{photo[2]}}</br><img src='data:image/png;base64, {{photo[0]}}'/></li>
+        <li>{{photo[2]}}</br><img src='data:image/png;base64, {{photo[0]}}' width=40%/></li>
     {% endfor %}
     </ul>
 {% endif %}
@@ -48,7 +50,7 @@
 <center><h3> Here are your Albums ! </h3></center>
 	<ul>
     {% for album in albums %}
-        <center><form method="post" action="{{ url_for('delete_album', value=album[0])}}"><a href="{{url_for('showPhotos',values=album[0])}}">{{album[1]}}</a><input type="submit" value="Delete ALBUM"></form></center>
+        <center><form method="post" action="{{ url_for('delete_album', value=album[0])}}"><a href="{{url_for('showPhotos',values=album[0])}}">{{album[1]}} &nbsp &nbsp &nbsp &nbsp</a><input type="submit" value="Delete ALBUM"></form></center>
     {% endfor %}
     </ul>
 {% endif %}
@@ -101,3 +103,4 @@
   {% endfor %}
   </ul>
 {% endif %}
+</center>

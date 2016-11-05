@@ -1,3 +1,4 @@
+DROP DATABASE photosharemaulik;
 CREATE DATABASE photosharemaulik;
 USE photosharemaulik;   
 
@@ -9,15 +10,15 @@ email varchar(60) UNIQUE,
 Password varchar(60),
 DOB DATE,
 Hometown varchar(60),
-Gender varchar(10),
+Gender varchar(1),
 PRIMARY KEY(UserID)
 );
 
 CREATE TABLE Albums(
-AlubmID integer NOT NULL AUTO_INCREMENT UNIQUE,
+AlbumID int4 AUTO_INCREMENT UNIQUE,
 Album_name varchar(60),
 OwnerID integer,
-DateOfCreation DATE,
+DateOfCreation DATETIME default current_timestamp,
 PRIMARY KEY(AlbumID)
 );
 
@@ -26,7 +27,6 @@ CREATE TABLE Photos
   PhotoID int4  AUTO_INCREMENT,
   data longblob ,
   caption VARCHAR(255),
-  AlbumID int4,
   PRIMARY KEY (PhotoID)
 );
 
@@ -36,7 +36,6 @@ Title varchar(60),
 PRIMARY KEY(TagID)
 );
 
-
 CREATE TABLE Comments(
 CID integer NOT NULL AUTO_INCREMENT UNIQUE,
 CommentText varchar(255),
@@ -44,51 +43,51 @@ PRIMARY KEY(CID)
 );
 
 CREATE TABLE Writes(
-UserID integer,
-CID integer,
+UserID int4,
+CID int4,
 PRIMARY KEY(UserID, CID),
-FOREIGN KEY(UserID) REFERENCES Users,
-FOREIGN KEY(CID) REFERENCES Comments
+FOREIGN KEY(UserID) REFERENCES Users(UserID),
+FOREIGN KEY(CID) REFERENCES Comments(CID) ON DELETE CASCADE
 );
 
 CREATE TABLE Creates(
 UserID integer,
-AlbumID integer,
+AlbumID integer auto_increment,
 PRIMARY KEY(AlbumID),
-FOREIGN KEY(UserID) REFERENCES Users,
-FOREIGN KEY(AlbumID) REFERENCES Albums
+FOREIGN KEY(UserID) REFERENCES Users(UserID),
+FOREIGN KEY(AlbumID) REFERENCES Albums(AlbumID) ON DELETE CASCADE
 );
 
 CREATE TABLE Likes(
 UserID integer,
 PhotoID integer,
 PRIMARY KEY(UserID,PhotoID),
-FOREIGN KEY(UserID) REFERENCES Users,
-FOREIGN KEY(PhotoID) REFERENCES Photos
+FOREIGN KEY(UserID) REFERENCES Users(UserID), 
+FOREIGN KEY(PhotoID) REFERENCES Photos(PhotoID) ON DELETE CASCADE
 );
 
 CREATE TABLE Stores(
-PhotoID integer,
+PhotoID integer auto_increment,
 AlbumID integer,
 PRIMARY KEY(PhotoID),
-FOREIGN KEY(PhotoID) REFERENCES Photos,
-FOREIGN KEY(AlbumID) REFERENCES Albums
+FOREIGN KEY(PhotoID) REFERENCES Photos(PhotoID) ON DELETE CASCADE,
+FOREIGN KEY(AlbumID) REFERENCES Albums(AlbumID) ON DELETE CASCADE
 );
 
 CREATE TABLE Has(
 CID integer,
 PhotoID integer,
 PRIMARY KEY(CID),
-FOREIGN KEY(CID) REFERENCES Comments,
-FOREIGN KEY(PhotoID) REFERENCES Photos
+FOREIGN KEY(CID) REFERENCES Comments(CID) ON DELETE CASCADE,
+FOREIGN KEY(PhotoID) REFERENCES Photos(PhotoID) ON DELETE CASCADE
 );
 
 CREATE TABLE AssociatedWith(
 TagID integer,
-AlbumID integer,
+PhotoID integer,
 PRIMARY KEY(TagID,PhotoID),
-FOREIGN KEY(TagID) REFERENCES Tags,
-FOREIGN KEY(PhotoID) REFERENCES Photos
+FOREIGN KEY(TagID) REFERENCES Tags(TagID) ON DELETE CASCADE,
+FOREIGN KEY(PhotoID) REFERENCES Photos(PhotoID) ON DELETE CASCADE
 );
 
 CREATE TABLE FriendsWith(
@@ -99,9 +98,4 @@ FOREIGN KEY(UID1) REFERENCES Users(UserID),
 FOREIGN KEY(UID2) REFERENCES Users(UserID)
 );
 
-
-
-
-
-INSERT INTO Users (email, password) VALUES ('test@bu.edu', 'test');
-INSERT INTO Users (email, password) VALUES ('test1@bu.edu', 'test');
+INSERT INTO USERS(USERID, FIRST_NAME) VALUES (99,'Anonymous')
